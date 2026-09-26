@@ -1,79 +1,94 @@
 import { useState } from "react";
 
-function StudyPlanner() {
+function StudyPlanner({ onBack }) {
   const [subject, setSubject] = useState("");
   const [hours, setHours] = useState("");
   const [plan, setPlan] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const createPlan = () => {
+  const generatePlan = async () => {
     if (!subject.trim()) {
       alert("Please enter a subject.");
       return;
     }
 
     if (!hours || Number(hours) <= 0) {
-      alert("Please enter the number of study hours.");
+      alert("Please enter valid study hours.");
       return;
     }
 
     setLoading(true);
     setPlan("");
 
-    setTimeout(() => {
-      const studyHours = Number(hours);
+    try {
+      const response = await fetch("https://studyai-backend-cwxs.onrender.com/api/plan", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          subject: subject,
+          hours: hours,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Unable to create study plan.");
+      }
+
+      setPlan(data.plan);
+    } catch (error) {
+      console.error(error);
 
       setPlan(
-        `Study Plan for ${subject}\n\n` +
-        `⏰ Total Study Time: ${studyHours} hour(s)\n\n` +
-        `📖 Session 1 — Learn the basic concepts\n\n` +
-        `📝 Session 2 — Study important definitions and examples\n\n` +
-        `🧠 Session 3 — Practice questions and active recall\n\n` +
-        `🔄 Final Session — Revise everything you learned\n\n` +
-        `💡 Tip: Take short breaks and test yourself instead of only rereading your notes.`
+        "Unable to connect to the AI server. Please make sure the backend is running."
       );
-
+    } finally {
       setLoading(false);
-    }, 1000);
+    }
   };
 
   return (
     <div className="tool-page">
+      <button className="back-button" onClick={onBack}>
+  ← Back to Dashboard
+</button>
       <div className="tool-header">
-        <div>
-          <span className="tool-label">AI LEARNING TOOL</span>
+        <span className="tool-label">AI LEARNING TOOL</span>
 
-          <h1>📅 Study Planner</h1>
+        <h1>📅 Study Planner</h1>
 
-          <p>
-            Create a simple and personalized study plan for your subjects.
-          </p>
-        </div>
+        <p>
+          Create a practical AI-powered study plan based on your available
+          time.
+        </p>
       </div>
 
       <div className="solver-card">
-        <label>What subject do you want to study?</label>
+        <label>Subject</label>
 
         <input
           type="text"
           value={subject}
           onChange={(e) => setSubject(e.target.value)}
-          placeholder="Example: Machine Learning"
+          placeholder="Example: Data Structures"
         />
 
-        <label>How many hours can you study?</label>
+        <label>Available study hours</label>
 
         <input
           type="number"
+          min="1"
           value={hours}
           onChange={(e) => setHours(e.target.value)}
-          placeholder="Example: 2"
-          min="1"
+          placeholder="Example: 3"
         />
 
         <button
           className="solve-button"
-          onClick={createPlan}
+          onClick={generatePlan}
           disabled={loading}
         >
           {loading ? "Creating Plan..." : "✨ Create Study Plan"}
@@ -83,17 +98,17 @@ function StudyPlanner() {
       {plan && (
         <div className="answer-card">
           <div className="answer-title">
-            <span>📅</span>
+            <span>📚</span>
 
             <div>
-              <h2>Your Study Plan</h2>
-              <p>Organized for effective learning</p>
+              <h2>AI Study Plan</h2>
+              <p>Personalized plan for {subject}</p>
             </div>
           </div>
 
           <div className="answer-content">
             {plan.split("\n").map((line, index) => (
-              <p key={index}>{line}</p>
+              <p key={index}>{line || "\u00A0"}</p>
             ))}
           </div>
         </div>

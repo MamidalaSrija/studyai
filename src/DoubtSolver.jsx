@@ -1,33 +1,49 @@
 import { useState } from "react";
 
-function DoubtSolver() {
+function DoubtSolver({ onBack }) {
   const [question, setQuestion] = useState("");
   const [answer, setAnswer] = useState("");
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
-  const solveDoubt = () => {
+  const solveDoubt = async () => {
     if (!question.trim()) return;
 
     setLoading(true);
     setAnswer("");
+    setError("");
 
-    setTimeout(() => {
-      setAnswer(
-        `Here's a simple explanation of your doubt:\n\n` +
-        `Your question is: "${question}"\n\n` +
-        `Think of the concept step by step. First, identify the main idea. ` +
-        `Then break the problem into smaller parts and understand how each ` +
-        `part connects to the next. This approach makes difficult concepts ` +
-        `easier to understand and remember.\n\n` +
-        `💡 Study Tip: Try explaining the concept in your own words after ` +
-        `reading the explanation.`
-      );
+    try {
+      const response = await fetch("https://studyai-backend-cwxs.onrender.com/api/doubt", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          question: question,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Something went wrong.");
+      }
+
+      setAnswer(data.answer);
+    } catch (error) {
+      console.error("Doubt Solver Error:", error);
+      setError("Unable to connect to the AI backend. Please try again.");
+    } finally {
       setLoading(false);
-    }, 1200);
+    }
   };
 
   return (
     <div className="tool-page">
+      <button className="back-button" onClick={onBack}>
+      ← Back to Dashboard
+    </button>
       <div className="tool-header">
         <div>
           <span className="tool-label">AI LEARNING TOOL</span>
@@ -49,10 +65,20 @@ function DoubtSolver() {
           rows="6"
         />
 
-        <button className="solve-button" onClick={solveDoubt}>
+        <button
+          className="solve-button"
+          onClick={solveDoubt}
+          disabled={loading}
+        >
           {loading ? "Thinking..." : "✨ Solve My Doubt"}
         </button>
       </div>
+
+      {error && (
+        <div className="error-card">
+          {error}
+        </div>
+      )}
 
       {answer && (
         <div className="answer-card">
@@ -66,7 +92,7 @@ function DoubtSolver() {
 
           <div className="answer-content">
             {answer.split("\n").map((line, index) => (
-              <p key={index}>{line}</p>
+              <p key={index}>{line || "\u00A0"}</p>
             ))}
           </div>
         </div>

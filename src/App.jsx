@@ -117,15 +117,15 @@ function App() {
       <main className="main">
 
         {/* DOUBT SOLVER PAGE */}
-        {active === "Doubt Solver" ? (
-  <DoubtSolver />
+       {active === "Doubt Solver" ? (
+  <DoubtSolver onBack={() => setActive("Dashboard")} />
 ) : active === "Summarizer" ? (
-  <NotesSummarizer />
+  <NotesSummarizer onBack={() => setActive("Dashboard")} />
 ) : active === "Quiz" ? (
-  <QuizGenerator />
+  <QuizGenerator onBack={() => setActive("Dashboard")} />
 ) : active === "Planner" ? (
-  <StudyPlanner />
-) : (    /* DASHBOARD */
+  <StudyPlanner onBack={() => setActive("Dashboard")} />
+) : (  /* DASHBOARD */
           <>
             <header className="topbar">
               <div>

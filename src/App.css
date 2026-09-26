@@ -667,14 +667,14 @@ footer {
   transform: translateX(2px);
 }
 .back-button {
-  display: block;
-  margin: 0 auto 20px;
   border: none;
   background: transparent;
-  color: #6248df;
-  font-size: 13px;
+  color: #6d5dfc;
+  font-size: 14px;
   font-weight: 600;
   cursor: pointer;
+  padding: 0;
+  margin-bottom: 18px;
 }
 
 .back-button:hover {

@@ -1,11 +1,11 @@
 import { useState } from "react";
-
-function QuizGenerator() {
+function QuizGenerator({ onBack }) {
   const [topic, setTopic] = useState("");
   const [quiz, setQuiz] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [selectedAnswers, setSelectedAnswers] = useState({});
 
-  const generateQuiz = () => {
+  const generateQuiz = async () => {
     if (!topic.trim()) {
       alert("Please enter a topic.");
       return;
@@ -13,50 +13,67 @@ function QuizGenerator() {
 
     setLoading(true);
     setQuiz([]);
+    setSelectedAnswers({});
 
-    setTimeout(() => {
-      setQuiz([
-        {
-          question: `What is the main concept of ${topic}?`,
-          options: ["Basic principles", "Random data", "Unrelated ideas", "None of these"],
-          answer: "Basic principles",
+    try {
+     const response = await fetch("https://studyai-backend-cwxs.onrender.com/api/quiz", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
         },
-        {
-          question: `Why is ${topic} important?`,
-          options: ["It has practical applications", "It is unnecessary", "It has no use", "None"],
-          answer: "It has practical applications",
-        },
-        {
-          question: `Which is commonly associated with ${topic}?`,
-          options: ["Learning", "Cooking", "Weather", "Sports"],
-          answer: "Learning",
-        },
-      ]);
+        body: JSON.stringify({
+          topic: topic,
+        }),
+      });
 
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Unable to generate quiz.");
+      }
+
+      setQuiz(data.questions);
+    } catch (error) {
+      console.error(error);
+
+      alert(
+        "Unable to connect to the AI server. Please make sure the backend is running."
+      );
+    } finally {
       setLoading(false);
-    }, 1000);
+    }
+  };
+
+  const selectAnswer = (questionIndex, option) => {
+    setSelectedAnswers({
+      ...selectedAnswers,
+      [questionIndex]: option,
+    });
   };
 
   return (
     <div className="tool-page">
+      <button className="back-button" onClick={onBack}>
+  ← Back to Dashboard
+</button>
       <div className="tool-header">
         <span className="tool-label">AI LEARNING TOOL</span>
 
-        <h1>🎯 Quiz Generator</h1>
+        <h1>🧠 Quiz Generator</h1>
 
         <p>
-          Generate practice questions and test your understanding.
+          Generate AI-powered multiple-choice questions to test your knowledge.
         </p>
       </div>
 
       <div className="solver-card">
         <label>Enter a topic</label>
 
-        <textarea
+        <input
+          type="text"
           value={topic}
           onChange={(e) => setTopic(e.target.value)}
-          placeholder="Example: Artificial Intelligence"
-          rows="4"
+          placeholder="Example: Machine Learning"
         />
 
         <button
@@ -71,10 +88,11 @@ function QuizGenerator() {
       {quiz.length > 0 && (
         <div className="answer-card">
           <div className="answer-title">
-            <span>🎯</span>
+            <span>📝</span>
+
             <div>
-              <h2>Practice Quiz</h2>
-              <p>Test your knowledge</p>
+              <h2>AI Generated Quiz</h2>
+              <p>Test your understanding of {topic}</p>
             </div>
           </div>
 
@@ -85,21 +103,25 @@ function QuizGenerator() {
                   {index + 1}. {item.question}
                 </h3>
 
-                {item.options.map((option) => (
-                  <button
-                    className="quiz-option"
-                    key={option}
-                    onClick={() =>
-                      alert(
-                        option === item.answer
-                          ? "✅ Correct answer!"
-                          : `❌ Incorrect. Correct answer: ${item.answer}`
-                      )
-                    }
-                  >
-                    {option}
-                  </button>
-                ))}
+                <div className="quiz-options">
+                  {item.options.map((option, optionIndex) => (
+                    <button
+                      key={optionIndex}
+                      className={`quiz-option ${
+                        selectedAnswers[index] === option ? "selected" : ""
+                      }`}
+                      onClick={() => selectAnswer(index, option)}
+                    >
+                      {option}
+                    </button>
+                  ))}
+                </div>
+
+                {selectedAnswers[index] && (
+                  <p className="quiz-answer">
+                    Correct Answer: <strong>{item.answer}</strong>
+                  </p>
+                )}
               </div>
             ))}
           </div>

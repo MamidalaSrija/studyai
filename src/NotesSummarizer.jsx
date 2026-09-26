@@ -1,47 +1,70 @@
 import { useState } from "react";
 
-function NotesSummarizer() {
+function NotesSummarizer({ onBack }) {
   const [notes, setNotes] = useState("");
   const [summary, setSummary] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const summarizeNotes = () => {
-    if (!notes.trim()) return;
+  const summarizeNotes = async () => {
+    if (!notes.trim()) {
+      alert("Please enter some notes.");
+      return;
+    }
 
     setLoading(true);
     setSummary("");
 
-    setTimeout(() => {
-      setSummary(
-        `Here is a simple summary of your notes:\n\n` +
-        `• Main idea: ${notes.slice(0, 120)}${notes.length > 120 ? "..." : ""}\n\n` +
-        `• Key points: Break the topic into smaller concepts and focus on the most important definitions, ideas and examples.\n\n` +
-        `• Revision tip: Read the important points once, close your notes, and try to explain them in your own words.`
-      );
+    try {
+      const response = await fetch("https://studyai-backend-cwxs.onrender.com/api/summarize", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          notes: notes,
+        }),
+      });
 
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Unable to summarize notes.");
+      }
+
+      setSummary(data.summary);
+    } catch (error) {
+      console.error(error);
+
+      setSummary(
+        "Unable to connect to the AI server. Please make sure the backend is running."
+      );
+    } finally {
       setLoading(false);
-    }, 1000);
+    }
   };
 
   return (
     <div className="tool-page">
+      <button className="back-button" onClick={onBack}>
+  ← Back to Dashboard
+</button>
       <div className="tool-header">
-        <div>
-          <span className="tool-label">AI LEARNING TOOL</span>
-          <h1>📝 Notes Summarizer</h1>
-          <p>
-            Turn lengthy notes into short, simple and easy-to-revise points.
-          </p>
-        </div>
+        <span className="tool-label">AI LEARNING TOOL</span>
+
+        <h1>📝 Notes Summarizer</h1>
+
+        <p>
+          Turn lengthy study notes into clear and useful revision material.
+        </p>
       </div>
 
       <div className="solver-card">
-        <label>Paste your notes here</label>
+        <label>Paste your notes</label>
 
         <textarea
           value={notes}
           onChange={(e) => setNotes(e.target.value)}
-          placeholder="Example: Paste your class notes, study material, or any topic here..."
+          placeholder="Paste your lecture notes, textbook content, or study material here..."
           rows="10"
         />
 
@@ -50,23 +73,24 @@ function NotesSummarizer() {
           onClick={summarizeNotes}
           disabled={loading}
         >
-          {loading ? "Summarizing..." : "✨ Summarize My Notes"}
+          {loading ? "Summarizing..." : "✨ Summarize Notes"}
         </button>
       </div>
 
       {summary && (
         <div className="answer-card">
           <div className="answer-title">
-            <span>📝</span>
+            <span>📚</span>
+
             <div>
               <h2>AI Summary</h2>
-              <p>Short and easy to revise</p>
+              <p>Important points from your notes</p>
             </div>
           </div>
 
           <div className="answer-content">
             {summary.split("\n").map((line, index) => (
-              <p key={index}>{line}</p>
+              <p key={index}>{line || "\u00A0"}</p>
             ))}
           </div>
         </div>
