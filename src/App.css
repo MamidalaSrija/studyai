@@ -680,3 +680,25 @@ footer {
 .back-button:hover {
   text-decoration: underline;
 }
+/* Fix mobile input text visibility */
+input,
+textarea,
+select {
+  background-color: #ffffff;
+  color: #222222;
+  -webkit-text-fill-color: #222222;
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: #888888;
+  opacity: 1;
+}
+
+input:focus,
+textarea:focus,
+select:focus {
+  background-color: #ffffff;
+  color: #222222;
+  -webkit-text-fill-color: #222222;
+}
